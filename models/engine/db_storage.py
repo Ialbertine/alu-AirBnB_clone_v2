@@ -12,46 +12,60 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 import os
 
 
-user = os.getenv('HBNB_MYSQL_USER')
-pwd = os.getenv('HBNB_MYSQL_PWD')
-host = os.getenv('HBNB_MYSQL_HOST')
-db = os.getenv('HBNB_MYSQL_DB')
-env = os.getenv('HBNB_ENV')
-
-
 class DBStorage:
     """Defining the class DBStorage"""
 
-    __classes = [State, City, User, Place, Review, Amenity]
+    __classes = [State, City]
     __engine = None
     __session = None
 
     def __init__(self):
         """Contructor for the class DBStorage"""
-        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'.format(
-            user, pwd, host, db), pool_pre_ping=True)
-    if env == "test":
-        Base.MetaData.drop_all()
+        dev_mode = user = password = host = db = ""
+        try:
+            user = os.getenv('HBNB_MYSQL_USER')
+            password = os.getenv('HBNB_MYSQL_PWD')
+            host = os.getenv('HBNB_MYSQL_HOST')
+            db = os.getenv('HBNB_MYSQL_DB')
+            dev_mode = os.getenv('HBNB_ENV')
+        except KeyError:
+            print("Warning: Environment variables were not complete")
+        self.__engine = create_engine(
+            "mysql+mysqldb://{}:{}@{}/{}".format(
+                user,
+                password,
+                host,
+                db
+            ), pool_pre_ping=True)
+        if dev_mode == "test":
+            Base.MetaData.drop_all(self.__engine)
 
     def all(self, cls=None):
         """Method to return a dictionary of objects"""
         my_dict = {}
         if cls in self.__classes:
-            result = DBStorage.__session.query(cls)
+            result = DBStorage.__session.query(cls).all()
             for row in result:
                 key = "{}.{}".format(row.__class__.__name__, row.id)
-                my_dict[key] = row
+                my_dict[key] = row.to_dict()
         elif cls is None:
             for cl in self.__classes:
-                result = DBStorage.__session.query(cl)
+                result = DBStorage.__session.query(cl).all()
                 for row in result:
                     key = "{}.{}".format(row.__class__.__name__, row.id)
-                    my_dict[key] = row
+                    my_dict[key] = row.to_dict()
         return my_dict
 
     def new(self, obj):
         """Method to add a new object to the current database"""
-        DBStorage.__session.add(obj)
+        if obj is not None:
+            try:
+                self.__session.add(obj)
+                self.__session.flush()
+                self.__session.refresh(obj)
+            except Exception as err:
+                self.__session.rollback()
+                raise err
 
     def save(self):
         """Method to commit all changes to the current database"""
