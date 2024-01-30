@@ -1,29 +1,28 @@
 #!/usr/bin/python3
 """ State Module for HBNB project """
 from models.base_model import BaseModel, Base
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
 from models.city import City
-from models import type_storage
-import os
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String
+from models import storage_type
 
 
 class State(BaseModel, Base):
     """ State class """
     __tablename__ = "states"
-    if type_storage == "db":
+
+    if storage_type == "db":
         cities = relationship("City", backref="state", cascade="all, delete")
         name = Column(String(128), nullable=False)
     else:
         name = ""
 
-    @property
-    def cities(self):
-        """getter attribute cities that returns the list of City"""
-        from models import storage
-        my_list = []
-        extracted_cities = storage.all(City).values()
-        for city in extracted_cities:
-            if self.id == city.state_id:
-                my_list.append(city)
-        return my_list
+        @property
+        def cities(self):
+            '''Return a list of cities with the same state_id
+            as current instance
+            '''
+            from models import storage
+            result = [city for city in storage.all(City).values()
+                      if city.state_id == self.id]
+            return result

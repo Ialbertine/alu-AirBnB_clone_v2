@@ -1,26 +1,27 @@
-#!/usr/bin/Python3
-"""This module defines the engine for the MySQL database"""
-from models.base_model import BaseModel, Base
-from models.user import User
-from models.state import State
+#!/usr/bin/python3
+'''Definition of engine for db storage
+'''
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
 from models.city import City
-from models.amenity import Amenity
+from models.state import State
+from models.user import User
 from models.place import Place
 from models.review import Review
-from sqlalchemy import (create_engine)
-from sqlalchemy.orm import sessionmaker, scoped_session
+from models.base_model import Base
+from models.amenity import Amenity
 import os
 
 
-class DBStorage:
-    """Defining the class DBStorage"""
-
-    __classes = [State, City]
+class DBStorage():
+    '''Class definition for database storage
+    '''
     __engine = None
     __session = None
 
     def __init__(self):
-        """Contructor for the class DBStorage"""
+        '''Initializes and establishes all connections for db storage
+        '''
         dev_mode = user = password = host = db = ""
         try:
             user = os.getenv('HBNB_MYSQL_USER')
@@ -29,7 +30,7 @@ class DBStorage:
             db = os.getenv('HBNB_MYSQL_DB')
             dev_mode = os.getenv('HBNB_ENV')
         except KeyError:
-            print("Warning: Environment variables were not complete")
+            print("Warning: Some environment variables were not found")
         self.__engine = create_engine(
             "mysql+mysqldb://{}:{}@{}/{}".format(
                 user,
@@ -37,27 +38,30 @@ class DBStorage:
                 host,
                 db
             ), pool_pre_ping=True)
-        if dev_mode == "test":
-            Base.MetaData.drop_all(self.__engine)
+        if dev_mode == 'test':
+            Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
-        """Method to return a dictionary of objects"""
-        my_dict = {}
-        if cls in self.__classes:
-            result = DBStorage.__session.query(cls).all()
-            for row in result:
-                key = "{}.{}".format(row.__class__.__name__, row.id)
-                my_dict[key] = row.to_dict()
-        elif cls is None:
-            for cl in self.__classes:
-                result = DBStorage.__session.query(cl).all()
-                for row in result:
-                    key = "{}.{}".format(row.__class__.__name__, row.id)
-                    my_dict[key] = row.to_dict()
-        return my_dict
+        '''Return all the all instances of type cls
+        '''
+        models = [City, State, User, Place, Review, Amenity]
+        result_dict = {}
+        if cls is not None and cls in models:
+            for obj in self.__session.query(cls).all():
+                result_dict.update(
+                    {"{}.{}".format(obj.__class__.__name__, obj.id): obj}
+                )
+        else:
+            for model in models:
+                for obj in self.__session.query(model).all():
+                    result_dict.update(
+                        {"{}.{}".format(obj.__class__.__name__, obj.id): obj}
+                    )
+        return result_dict
 
     def new(self, obj):
-        """Method to add a new object to the current database"""
+        '''Adds obj to the current database session
+        '''
         if obj is not None:
             try:
                 self.__session.add(obj)
@@ -68,21 +72,26 @@ class DBStorage:
                 raise err
 
     def save(self):
-        """Method to commit all changes to the current database"""
-        DBStorage.__session.commit()
+        '''Commits all pending changes to the database
+        '''
+        self.__session.commit()
 
     def delete(self, obj=None):
-        """Method to delete a new object to the current database"""
-        DBStorage.__session.delete(obj)
+        '''Delete from the current database session
+        '''
+        if obj is not None:
+            self.__session.delete(obj)
 
     def reload(self):
-        """Method to create the current database session"""
+        '''Creates all tables in the database and initializes new session
+        '''
         Base.metadata.create_all(self.__engine)
         session_factory = sessionmaker(bind=self.__engine,
                                        expire_on_commit=False)
         Session = scoped_session(session_factory)
-        DBStorage.__session = Session()
+        self.__session = Session()
 
     def close(self):
-        """public methodto to call remove method"""
-        DBStorage.__session.close()
+        '''Flushes commits and closes current database session
+        '''
+        self.__session.close()
