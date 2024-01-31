@@ -19,16 +19,16 @@ class HBNBCommand(cmd.Cmd):
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
-        'BaseModel': BaseModel, 'User': User, 'Place': Place,
-        'State': State, 'City': City, 'Amenity': Amenity,
-        'Review': Review
-    }
+               'BaseModel': BaseModel, 'User': User, 'Place': Place,
+               'State': State, 'City': City, 'Amenity': Amenity,
+               'Review': Review
+              }
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
-        'number_rooms': int, 'number_bathrooms': int,
-        'max_guest': int, 'price_by_night': int,
-        'latitude': float, 'longitude': float
-    }
+             'number_rooms': int, 'number_bathrooms': int,
+             'max_guest': int, 'price_by_night': int,
+             'latitude': float, 'longitude': float
+            }
 
     def preloop(self):
         """Prints if isatty is false"""
@@ -115,31 +115,31 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        class_name = params = key = value = ""
+        cls = params = key = value = ""
+        allowed_types = (int, float, str)
         if not args:
             print("** class name missing **")
             return
+        args = args.strip()
         if " " in args:
-            class_name, params = \
-                args[:args.find(" ")], args[args.find(" ") + 1:].strip()
-        if not class_name:
-            class_name = args
-
-        if class_name not in HBNBCommand.classes:
+            cls = args[:args.find(" ")]
+        if not cls:
+            cls = args
+        if cls not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        new_instance = HBNBCommand.classes[class_name]()
-
-        for param in params.split():
-            if "=" in param:
-                param = param.partition("=")
-                key = param[0]
-                value = eval(param[-1].replace("_", " "))
-                if type(value) in [str, int, float]:
+        params = args[args.find(" ") + 1:].strip()
+        new_instance = HBNBCommand.classes[cls]()
+        for item in params.split():
+            if "=" in item:
+                item = item.partition("=")
+                value = eval(item[2].replace("_", " "))
+                key = item[0]
+                if type(value) in allowed_types:
                     setattr(new_instance, key, value)
+        storage.new(new_instance)
         storage.save()
         print(new_instance.id)
-        storage.save()
 
     def help_create(self):
         """ Help information for the create method """
@@ -202,7 +202,7 @@ class HBNBCommand(cmd.Cmd):
         key = c_name + "." + c_id
 
         try:
-            del (storage.all()[key])
+            del(storage.all()[key])
             storage.save()
         except KeyError:
             print("** no instance found **")
@@ -217,16 +217,14 @@ class HBNBCommand(cmd.Cmd):
         print_list = []
 
         if args:
-            args = args.split(' ')[0]  # remove possible trailing args
+            args = args.strip()  # remove possible trailing args
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage._FileStorage__objects.items():
-                if k.split('.')[0] == args:
-                    print_list.append(str(v))
+            print_list = [str(obj) for obj in
+                          storage.all(HBNBCommand.classes[args]).values()]
         else:
-            for k, v in storage._FileStorage__objects.items():
-                print_list.append(str(v))
+            print_list = [str(obj) for obj in storage.all().values()]
 
         print(print_list)
 

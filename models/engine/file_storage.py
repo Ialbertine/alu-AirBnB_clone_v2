@@ -11,13 +11,12 @@ class FileStorage:
     def all(self, cls=None):
         """Returns a dictionary of models currently in storage"""
         if cls is None:
-            return self.__objects
-        else:
-            filtered_obj = {}
-            for key, value in self.__objects.items():
-                if type(value) == cls:
-                    filtered_obj[key] = value
-            return filtered_obj
+            return FileStorage.__objects
+        my_dict = {}
+        for key, val in FileStorage.__objects.items():
+            if isinstance(val, cls):
+                my_dict[key] = val.to_dict()
+        return my_dict
 
     def new(self, obj):
         """Adds a new object to the storage dictionary"""
@@ -41,12 +40,12 @@ class FileStorage:
             json.dump(temp, f)
 
     def reload(self):
-        """Loads the storage dictionary from a file"""
+        """Loads storage dictionary from file"""
         from models.base_model import BaseModel
         from models.user import User
-        from models.place import Place
         from models.state import State
         from models.city import City
+        from models.place import Place
         from models.amenity import Amenity
         from models.review import Review
 
