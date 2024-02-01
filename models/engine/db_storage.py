@@ -54,7 +54,7 @@ class DBStorage():
                     {"{}.{}".format(obj.__class__.__name__, obj.id): obj}
                 )
         else:
-            for model in models:
+            for model in DBStorage.models:
                 for obj in self.__session.query(model).all():
                     result_dict.update(
                         {"{}.{}".format(obj.__class__.__name__, obj.id): obj}
