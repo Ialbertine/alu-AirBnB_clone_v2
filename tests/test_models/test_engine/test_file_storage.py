@@ -4,8 +4,14 @@ import unittest
 from models.base_model import BaseModel
 from models import storage
 import os
+import unittest
+from os import environ
 
 
+STORAGE_TYPE = environ.get('HBNB_TYPE_STORAGE')
+
+
+@unittest.skipIf(STORAGE_TYPE == 'db', 'FS tests not for DB')
 class test_fileStorage(unittest.TestCase):
     """ Class to test the file storage method """
 
