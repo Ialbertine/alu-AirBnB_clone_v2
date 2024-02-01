@@ -2,7 +2,6 @@
 """ Place Module for HBNB project """
 from models.base_model import BaseModel, Base
 from models.review import Review
-from models.amenity import Amenity
 from sqlalchemy import Table, Column, String, Integer, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from models import storage_type
@@ -52,7 +51,8 @@ class Place(BaseModel, Base):
 
         @property
         def amenities(self):
-            from models import storage
+            from models import storage            
+            from models.amenity import Amenity
             result = [amenity for amenity in storage.all(Amenity).values()
                       if amenity.id in self.amenity_ids]
             return result
