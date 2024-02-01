@@ -29,7 +29,7 @@ class FileStorage:
             if key in self.__objects:
                 del self.__objects[key]
                 self.save()
-    
+
     def delete_all(self):
         """
             deletes all stored objects, for testing purposes
@@ -37,7 +37,7 @@ class FileStorage:
         try:
             with open(FileStorage.__file_path, mode='w') as f_io:
                 pass
-        except:
+        except Exception:
             pass
         del FileStorage.__objects
         FileStorage.__objects = {}

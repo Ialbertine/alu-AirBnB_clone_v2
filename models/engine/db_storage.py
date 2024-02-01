@@ -46,7 +46,7 @@ class DBStorage():
     def all(self, cls=None):
         '''Return all the all instances of type cls
         '''
-        
+
         result_dict = {}
         if cls is not None and cls in DBStorage.models:
             for obj in self.__session.query(cls).all():
@@ -60,7 +60,7 @@ class DBStorage():
                         {"{}.{}".format(obj.__class__.__name__, obj.id): obj}
                     )
         return result_dict
-    
+
     def delete_all(self):
         """
            deletes all stored objects, for testing purposes
