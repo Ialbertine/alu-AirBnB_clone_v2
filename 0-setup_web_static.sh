@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Install nginx and create a fake html file
 
 link_dir="/data/web_static/current"
 release_folder="/data/web_static/releases/test"
